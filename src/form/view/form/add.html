@@ -1,0 +1,104 @@
+<?php $this->layout('page'); ?>
+
+<form class="layui-form layui-card">
+    <div class="layui-card-body">
+        <div class="layui-row layui-col-space12">
+            <div class="layui-col-md2 layui-col-sm-3">
+                <div id="layui-form-attribute">
+                    <?php $this->load('/form/comm/component') ?>
+                </div>
+            </div>
+            <div class="layui-col-md8 layui-col-sm-6">
+                <div class="layui-card-header">
+                    <!-- 操作列表 -->
+                    <?php $this->load('/form/comm/oper') ?>
+                </div>
+                <!-- 表单设计区域 -->
+                <div id="formBuilder" style="width: 100%"></div>
+            </div>
+            <div class="layui-col-md2 layui-col-sm-3" style="padding-top: 0;">
+                <div class="layui-tab layui-tab-brief">
+                    <ul class="layui-tab-title">
+                        <li class="layui-this">组件属性</li>
+                        <li id="form-config-attr">表单属性</li>
+                    </ul>
+
+                    <div class="layui-tab-content" id="layui-form-attribute">
+                        <div class="layui-tab-item layui-form layui-show" id="Propertie" lay-filter="Propertie">
+                        </div>
+                        <div class="layui-tab-item" id="formConfig">
+                            <!-- 表单配置 -->
+                            <?php $this->load('/form/comm/form') ?>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="layui-htmlview" style="display: none;">
+    <textarea id="json-code"></textarea>
+    <div class="layui-htmlbtn">
+        <button id="copy-code" class="layui-btn layui-hide">复制代码</button>
+        <button id="import-code" class="layui-btn layui-hide">导入数据</button>
+    </div>
+</div>
+
+<div class="hidden">
+    <button id="common-upload">公共的上传按钮</button>
+</div>
+
+<?php $this->block('js'); ?>
+<script src="<?= $this->assets('static/component/sortable/sortable.js') ?>"></script>
+<script>
+    layui.use(['jquery', 'http', 'formDesign'], function () {
+        const $ = layui.jquery
+        const http = layui.http
+        const formDesign = layui.formDesign
+
+        // 设计器
+        const design = formDesign.render({
+            elem: '#formBuilder',
+            upload: "<?=$this->url('/upload')?>",
+            preview: "<?=$this->url('/form/preview')?>",
+            region: JSON.parse('<?=$region?>'),
+            eval: []
+        });
+
+        // 返回
+        $('body').on('click', '.layui-btn-return', function () {
+            window.location.href = "<?=$this->url('/form')?>"
+        })
+
+        $('body').on('click', '.layui-btn-save', function () {
+            layer.confirm('确定保存表单吗?', { icon: 3, title: 'Tips' }, async function (index) {
+                layer.close(index);
+                let config = design.config.data
+                if (config.length <= 0) {
+                    layer.msg('表单不能为空', { icon: 2 })
+                    return false;
+                }
+                let values = formDesign.getFormConfig()
+                if (values.title == '') {
+                    layer.msg('表单名称不能为空', { icon: 2 })
+                    // 优化体验，切换栏目
+                    document.querySelector('#form-config-attr').click()
+                    document.querySelector('input[name="title"].form-config-item').focus()
+                    return false;
+                }
+                values.config = JSON.stringify(config)
+
+                const result = await http.post('', values)
+                if (result.code != '1') {
+                    layer.msg(result.msg, { icon: 2 })
+                    return false;
+                }
+                // 操作成功
+                parent.layer.msg(result.msg, { icon: 1 })
+                window.location.href = "<?=$this->url('/form')?>"
+            });
+        })
+    })
+</script>
+<?php $this->blockEnd() ?>

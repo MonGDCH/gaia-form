@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>
+        <?= $this->get('data.title', '') ?>
+    </title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="renderer" content="webkit">
+    <!-- 依 赖 样 式 -->
+    <link rel="stylesheet" href="<?=$this->assets('static/component/mon/mon.css') ?>" />
+    <style>
+        body {
+            width: 100%;
+            height: 100%;
+            background-image: url("<?=$this->assets('/static/img/background.svg')?>");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+        }
+
+        #form-box,
+        #success-box,
+        #error-box {
+            display: none;
+        }
+
+        .box {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 540px;
+            width: 100%;
+            text-align: center;
+        }
+    </style>
+</head>
+
+<body class="pear-container">
+    <div class="page-container">
+        <div class="layui-card page-card mr-t-sm">
+            <div class="layui-card-body pd-t-sm">
+                <div id="form-box">
+                    <div class="layui-text">
+                        <h1 class="text-center layui-font-blue layui-font-28">
+                            <?= $this->get('data.title', '') ?>
+                        </h1>
+                        <p class="layui-font-16" style="text-indent: 2em">
+                            <?= $this->get('data.remark', '') ?>
+                        </p>
+                    </div>
+                    <hr>
+                    <div id="form-container"></div>
+                </div>
+                <div id="success-box">
+                    <div class="box">
+                        <div>
+                            <svg t="1705284941576" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                                xmlns="http://www.w3.org/2000/svg" p-id="4636" width="64" height="64">
+                                <path d="M512 512m-448 0a448 448 0 1 0 896 0 448 448 0 1 0-896 0Z" fill="#4CAF50"
+                                    p-id="4637">
+                                </path>
+                                <path
+                                    d="M738.133333 311.466667L448 601.6l-119.466667-119.466667-59.733333 59.733334 179.2 179.2 349.866667-349.866667z"
+                                    fill="#CCFF90" p-id="4638"></path>
+                            </svg>
+                            <p class="mr-t-sm layui-font-16" id="success-msg">您的表单已经提交，感谢您的参与</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="error-box">
+                    <div class="box">
+                        <div>
+                            <svg t="1705112839393" class="icon" viewBox="0 0 1024 1024" version="1.1"
+                                xmlns="http://www.w3.org/2000/svg" p-id="10014" width="96" height="96">
+                                <path
+                                    d="M700.703881 322.360346c-19.041887-19.041887-49.917801-19.041887-68.958665 0L511.064738 443.0398 390.385284 322.360346c-19.043933-19.041887-49.917801-19.041887-68.961735 0-19.041887 19.043933-19.041887 49.917801 0 68.961735l120.679454 120.679454L321.424573 632.680989c-19.041887 19.043933-19.041887 49.917801 0 68.961735 19.043933 19.038817 49.917801 19.038817 68.961735 0l120.679454-120.680477 120.680477 120.680477c19.041887 19.038817 49.917801 19.038817 68.958665 0 19.043933-19.043933 19.043933-49.917801 0-68.961735L580.02545 512.001535l120.678431-120.679454C719.747814 372.278147 719.747814 341.40428 700.703881 322.360346zM803.635875 0 218.492579 0c-80.791669 0-146.285568 65.494922-146.285568 146.288638l0 731.425794c0 80.788599 65.494922 146.285568 146.285568 146.285568l438.856704 0 6.986834 0 285.584302-285.586348 0-6.987858L949.920419 146.288638C949.921443 65.494922 884.42652 0 803.635875 0zM876.778659 731.425794 657.349283 731.425794l0 219.431422L218.492579 950.857216c-40.3943 0-73.142784-32.746438-73.142784-73.142784L145.349795 146.288638c0-40.396346 32.748484-73.142784 73.142784-73.142784l585.143296 0c40.396346 0 73.142784 32.746438 73.142784 73.142784L876.778659 731.425794z"
+                                    fill="#1296db" p-id="10015"></path>
+                            </svg>
+                            <div class="layui-text mr-t-sm">
+                                <h1 class="layui-font-24 layui-font-red"><?=$this->get('title', '非常抱歉')?></h1>
+                                <p class="layui-font-16"><?=$this->get('msg', '问卷表单已删除或不存在')?></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 依 赖 脚 本 -->
+    <script src="<?=$this->assets('static/component/layui/layui.js') ?>"></script>
+    <script src="<?=$this->assets('static/component/mon/mon.js') ?>"></script>
+    <script src="<?=$this->assets('static/component/vue/vue.v3.js') ?>"></script>
+    <script>
+        layui.use(['jsCtrl', 'formRender'], function () {
+            const jsCtrl = layui.jsCtrl
+            const formRender = layui.formRender
+            const box = "<?=$this->get('box', 'error')?>"
+            // new jsCtrl()
+
+            if (box !== 'form') {
+                document.querySelector('#error-box').style.display = 'block'
+                return;
+            }
+
+            document.querySelector('#form-box').style.display = 'block'
+            const config = JSON.parse('<?= $this->get("data.config", "{}") ?>')
+            const formConfig = {
+                align: "<?= $this->get('data.align', '1') ?>",
+                submit: {
+                    enable: true,
+                    url: '',
+                    handler: function (ret) {
+                        if (ret.code != '1') {
+                            layer.msg(ret.msg)
+                            return false;
+                        }
+
+                        document.querySelector('#form-box').style.display = 'none'
+                        document.querySelector('#success-box').style.display = 'block'
+                        console.log(ret.msg)
+                        if (ret.msg) {
+                            document.querySelector('#success-msg').innerHTML = ret.msg
+                        }
+                    },
+                }
+            }
+            formRender('#form-container', config, formConfig, {
+                region: JSON.parse('<?= $this->get("region", "{}") ?>')
+            })
+        })
+    </script>
+</body>
+
+</html>

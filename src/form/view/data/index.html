@@ -1,0 +1,157 @@
+<?php $this->layout('page'); ?>
+
+<!-- 搜索 -->
+<div class="search-panel" id="search-form">
+    <form class="layui-form" lay-filter="search">
+        <div class="layui-form-item">
+            <label class="layui-form-label">查询字段</label>
+            <div class="layui-input-block">
+                <?=$this->build_select('data_field', json_decode($data['config'], true), [], [], false, true, 'name', 'label')?>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">字段值：</label>
+            <div class="layui-input-block">
+                <input type="text" name="data_value" placeholder="搜索查询字段的值，查询字段不为空时有效" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">更新时间：</label>
+            <div class="layui-input-block">
+                <input type="text" name="update_time" placeholder="搜索创建时间" class="layui-input date-range">
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="layui-card">
+    <div class="layui-card-body m-card-body">
+        <!-- 表格 -->
+        <table id="table" lay-filter="table"></table>
+    </div>
+</div>
+
+<!-- 表格操作栏 -->
+<script type="text/html" id="toolbar">
+    <?= $this->build_toolbar('/form/data', $uid, ['search', 'reset']); ?>
+    <?php if($this->checkAuth('/form/data/export', $uid)): ?>
+    <button class="layui-btn layui-btn-sm layui-btn-success" lay-event="export" title="导出"><i class="layui-icon layui-icon-export"></i>导出</button>
+    <?php endif; ?>
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="operate">
+    <div class="oper-btns">
+        <?php if($user): ?>
+        <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="user">查看填写人</button>
+        <?php endif; ?>
+        <?php if($this->checkAuth('/form/data/edit', $uid)): ?>
+        <button type="button" class="layui-btn layui-bg-blue layui-btn-xs" lay-event="edit">编辑内容</button>
+        <?php endif; ?>
+    </div>
+</script>
+
+<?php $this->block('js'); ?>
+<script>
+    layui.use(['mTable', 'mForm', 'http', 'common'], function () {
+        const mTable = layui.mTable
+        const mForm = layui.mForm
+        const http = layui.http
+        const common = layui.common
+        const config = JSON.parse('<?=$data["config"]?>')
+
+        let cols = [{ field: 'id', title: 'ID', width: 60, align: 'center' }];
+        config.forEach(item => {
+            cols.push({
+                title: item.label,
+                align: 'center',
+                minWidth: 80,
+                templet: d => d.data[item.name]
+            })
+        });
+        cols.push(
+            { field: 'update_time', title: '最新操作时间', width: 160, align: 'center', templet: d => mTable.format.dateTime(d.update_time) },
+            { title: '操作', templet: '#operate', width: 170, fixed: 'right' }
+        )
+
+        // 渲染搜索表单
+        mForm.render()
+        // 渲染表格
+        mTable.render({
+            elem: '#table',
+            url: "<?=$this->url('/form/data')?>?isApi=1&form_id=<?=$data['id']?>",
+            cols: [cols]
+        })
+        // 绑定表格事件
+        mTable.bindEvent('table', {
+            // toolbar事件
+            toolbar: {
+                // 搜索
+                search: function (data) {
+                    if (data.update_time) {
+                        let iUpdate_time = data.update_time.split(' - ')
+                        data.start_time = common.strtotime(iUpdate_time[0] + ' 00:00:00')
+                        data.end_time = common.strtotime(iUpdate_time[1] + ' 23:59:59')
+                    }
+
+                    return data
+                },
+                // 导出
+                export: function () {
+                    let url = "<?=$this->url('/form/data/export')?>" + "?form_id=<?=$data['id']?>"
+                    window.open(url, '_blank')
+                }
+            },
+            // tool事件
+            tool: {
+                // 查看用户
+                user: async function (data) {
+                    if (data.uid <= 0) {
+                        layer.msg('该记录不存在用户', { icon: 2 });
+                        return;
+                    }
+                    const ret = await http.get("<?=$this->url('/ucenter/getUser')?>" + '?id=' + data.uid)
+                    if (ret.code == '1' && ret.data.length > 0) {
+                        let userInfo = ret.data[0]
+                        const mapping = {
+                            'id': '用户ID',
+                            'nickname': '用户昵称',
+                            'email': '邮箱',
+                            'mobile': '手机号',
+                        }
+                        let html = Object.keys(mapping).map(k => {
+                            return ` <tr><td>${mapping[k]}</td><td>${userInfo[k] || ''}</td></tr>`
+                        }).join('')
+                        layer.open({
+                            type: 1, // page 层类型
+                            area: ['500px', '300px'],
+                            title: '查看用户信息',
+                            shade: 0.6,
+                            shadeClose: true,
+                            content: ` <div style="padding: 0 10px;">
+                                            <table class="layui-table">
+                                                <colgroup><col width="100"><col></colgroup>
+                                                <tbody>${html}</tbody>
+                                            </table>
+                                        </div>`
+                        });
+                    }
+                },
+                // 编辑
+                edit: {
+                    url: "<?=$this->url('/form/data/edit')?>",
+                }
+            },
+            sort: (data) => {
+                if (data.update_time) {
+                    let iUpdate_time = data.update_time.split(' - ')
+                    data.start_time = common.strtotime(iUpdate_time[0] + ' 00:00:00')
+                    data.end_time = common.strtotime(iUpdate_time[1] + ' 23:59:59')
+                }
+
+                return data
+            }
+        })
+    })
+</script>
+<?php $this->blockEnd(); ?>

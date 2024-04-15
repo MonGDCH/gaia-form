@@ -1,0 +1,40 @@
+<div class="layui-form-item">
+    <label class="layui-form-label">标题名称</label>
+    <div class="layui-input-inline">
+        <input type="text" name="title" class="layui-input form-config-item" value="<?=$this->get('data.title', '')?>"
+            lay-verify="required" lay-reqtext="请输入标题名称">
+    </div>
+</div>
+<div class="layui-form-item">
+    <label class="layui-form-label">对齐方式</label>
+    <div class="layui-input-inline">
+        <?= $this->build_select('align', $align, [$this->get('data.align', key($align))], ['lay-filter' => 'align-type-filter', 'class' => 'form-config-item'], true) ?>
+    </div>
+</div>
+<div class="layui-form-item">
+    <label class="layui-form-label">问卷描述</label>
+    <div class="layui-input-inline">
+        <textarea name="remark" class="layui-textarea form-config-item"><?=$this->get('data.remark', '')?></textarea>
+    </div>
+</div>
+<div class="layui-form-item">
+    <label class="layui-form-label">排序权重</label>
+    <div class="layui-input-inline">
+        <input type="number" lay-affix="number" name="sort" min="0" max="100" class="layui-input form-config-item"
+            value="<?=$this->get('data.sort', 50)?>">
+    </div>
+</div>
+
+<div class="layui-form-item">
+    <label class="layui-form-label">需要登录</label>
+    <div class="layui-input-inline">
+        <?= $this->build_select('auth_login', $auth_login, [$this->get('data.auth_login', key($auth_login))], ['class' => 'form-config-item'], true) ?>
+    </div>
+</div>
+
+<div class="layui-form-item">
+    <label class="layui-form-label">允许编辑</label>
+    <div class="layui-input-inline">
+        <?= $this->build_select('auth_edit', $auth_edit, [$this->get('data.auth_edit', key($auth_edit))], ['class' => 'form-config-item'], true) ?>
+    </div>
+</div>

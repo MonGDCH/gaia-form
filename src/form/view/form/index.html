@@ -1,0 +1,164 @@
+<?php $this->layout('page'); ?>
+
+<!-- 搜索 -->
+<div class="search-panel" id="search-form">
+    <form class="layui-form" lay-filter="search">
+        <div class="layui-form-item">
+            <label class="layui-form-label">名称：</label>
+            <div class="layui-input-block">
+                <input type="text" name="title" placeholder="搜索名称" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">状态：</label>
+            <div class="layui-input-block">
+                <?=$this->build_select('status', $status, [], [], true, true)?>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">创建时间：</label>
+            <div class="layui-input-block">
+                <input type="text" name="create_time" placeholder="搜索创建时间" class="layui-input date-range">
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="layui-card">
+    <div class="layui-card-body m-card-body">
+        <!-- 表格 -->
+        <table id="table" lay-filter="table"></table>
+    </div>
+</div>
+
+<!-- 表格操作栏 -->
+<script type="text/html" id="toolbar">
+    <?php if($this->checkAuth('/form/add', $uid)): ?>
+    <button class="layui-btn layui-btn-sm layui-btn-success" lay-event="design" title="新增"><i class="layui-icon layui-icon-add-1"></i>新增</button>
+    <?php endif; ?>
+    <?= $this->build_toolbar('/form', $uid, ['search', 'reset']); ?>
+</script>
+
+<!-- 操作 -->
+<script type="text/html" id="operate">
+    <div class="oper-btns">
+        <?php if($this->checkAuth('/form/edit', $uid)): ?>
+        <!-- {{# if(d.status != '2'){ }} -->
+        <button type="button" class="layui-btn layui-btn-normal layui-btn-xs" lay-event="designEdit">编辑表单</button>
+        <!-- {{# } }} -->
+        <?php endif; ?>
+        <?php if($this->checkAuth('/form/status', $uid)): ?>
+        <!-- {{# if(d.status == '1'){ }} -->
+        <button type="button" class="layui-btn layui-btn-warm layui-btn-xs" data-idx="{{ d.id }}" data-url="<?=$this->url('/form/status')?>" data-title="确认发布该表单么？" data-status="2" lay-event="confirm">发布表单</button>
+        <!-- {{# }else if(d.status == '2'){ }} -->
+        <button type="button" class="layui-btn layui-btn-danger layui-btn-xs" data-idx="{{ d.id }}" data-url="<?=$this->url('/form/status')?>" data-title="确认关闭该表单么？" data-status="0" lay-event="confirm">关闭表单</button>
+        <!-- {{# }else{ }} -->
+        <button type="button" class="layui-btn layui-btn-xs" data-idx="{{ d.id }}" data-url="<?=$this->url('/form/status')?>" data-title="确认恢复该表单么？" data-status="1" lay-event="confirm">恢复表单</button>
+        <!-- {{# } }} -->
+        <?php endif; ?>
+        <?php if($this->checkAuth('/form/data', $uid)): ?>
+        <button type="button" class="layui-btn layui-btn-primary layui-btn-xs" lay-event="data">查看数据</button>
+        <?php endif; ?>
+    </div>
+</script>
+
+<?php $this->block('js'); ?>
+<script>
+    layui.use(['mTable', 'mForm', 'common', 'action'], function () {
+        const previewAuth = "<?= $this->checkAuth('/form/edit', $uid) ? '1' : '0' ?>"
+        const mTable = layui.mTable
+        const mForm = layui.mForm
+        const common = layui.common
+        const action = layui.action
+        // 缓存名
+        const FORMDESIGN_CACHE = 'form-design-mon'
+        const FORMCONFIG_CACHE = 'form-config-mon'
+
+        const statusList = JSON.parse('<?= $statusList ?>')
+        const authEdit = JSON.parse('<?= $auth_edit ?>')
+        const authLogin = JSON.parse('<?= $auth_login ?>')
+
+        // 渲染搜索表单
+        mForm.render()
+        // 渲染表格
+        mTable.render({
+            elem: '#table',
+            url: "<?=$this->url('/form')?>?isApi=1",
+            cols: [[
+                { field: 'id', title: 'ID', width: 80, align: 'center' },
+                { field: 'title', title: '名称', width: 240, templet: (d) => `<a href="javascript:void(0);" class="mon-link" lay-event="preview">${d.title}</a>` },
+                { field: 'remark', title: '备注', minWidth: 240 },
+                { field: 'auth_login', title: '需要登录', width: 100, align: 'center', templet: d => authLogin[d.auth_login] || '未知' },
+                { field: 'auth_edit', title: '允许修改', width: 100, align: 'center', templet: d => authEdit[d.auth_edit] || '未知' },
+                { field: 'status', title: '状态', width: 100, align: 'center', templet: d => statusList[d.status] || '未知' },
+                { field: 'publish_time', title: '发布时间', width: 168, align: 'center', templet: d => mTable.format.dateTime(d.publish_time) },
+                { field: 'sort', title: '权重', width: 80, align: 'center', sort: true },
+                { field: 'create_time', title: '创建时间', width: 168, align: 'center', templet: d => mTable.format.dateTime(d.create_time) },
+                { field: 'operate', title: '操作', templet: '#operate', minWidth: 160 }
+            ]]
+        })
+        // 绑定表格事件
+        mTable.bindEvent('table', {
+            // toolbar事件
+            toolbar: {
+                // 新增
+                design: function () {
+                    action.dialog("<?=$this->url('/form/add')?>", '新增', {}, true)
+                },
+                // 搜索
+                search: function (data) {
+                    if (data.create_time) {
+                        let icreate_time = data.create_time.split(' - ')
+                        data.start_time = common.strtotime(icreate_time[0] + ' 00:00:00')
+                        data.end_time = common.strtotime(icreate_time[1] + ' 23:59:59')
+                    }
+
+                    return data
+                },
+            },
+            // tool事件
+            tool: {
+                // 编辑
+                designEdit: function (data) {
+                    action.dialog("<?=$this->url('/form/edit')?>" + '?idx=' + data.id, '编辑', {}, true)
+                },
+                // 参看数据
+                data: function (data) {
+                    action.dialog("<?=$this->url('/form/data')?>" + '?form_id=' + data.id, '查看数据', {}, true)
+                },
+                // 预览表单
+                preview: function (data) {
+                    if (previewAuth) {
+                        localStorage.setItem(FORMDESIGN_CACHE, data.config)
+                        localStorage.setItem(FORMCONFIG_CACHE, JSON.stringify({
+                            title: data.title,
+                            align: data.align,
+                            remark: data.remark
+                        }))
+
+                        setTimeout(() => {
+                            layer.open({
+                                type: 2,
+                                title: '预览',
+                                shadeClose: true,
+                                area: ['860px', '640px'],
+                                content: "<?=$this->url('/form/preview')?>",
+                            });
+                        }, 100)
+                    }
+                }
+
+            },
+            sort: (data) => {
+                if (data.create_time) {
+                    let icreate_time = data.create_time.split(' - ')
+                    data.start_time = common.strtotime(icreate_time[0] + ' 00:00:00')
+                    data.end_time = common.strtotime(icreate_time[1] + ' 23:59:59')
+                }
+
+                return data
+            }
+        })
+    })
+</script>
+<?php $this->blockEnd(); ?>

@@ -1,0 +1,42 @@
+<?php $this->layout('page'); ?>
+
+
+<div class="page-container">
+    <div class="layui-card page-card">
+        <div class="layui-card-body">
+            <div class="layui-text">
+                <h2 id="title"></h2>
+                <p id="remark"></p>
+            </div>
+            <div id="form-design-container"></div>
+        </div>
+    </div>
+</div>
+
+<?php $this->block('js'); ?>
+<script src="<?=$this->assets('static/component/vue/vue.v3.js') ?>"></script>
+<script>
+    layui.use(['formRender'], function () {
+        // 缓存名
+        const FORMDESIGN_CACHE = 'form-design-mon'
+        const configJson = localStorage.getItem(FORMDESIGN_CACHE) || '{}'
+        const config = JSON.parse(configJson);
+        const FORMCONFIG_CACHE = 'form-config-mon'
+        const formJson = localStorage.getItem(FORMCONFIG_CACHE) || '{}'
+        const formConfig = JSON.parse(formJson)
+        const formRender = layui.formRender
+
+        document.querySelector('#title').innerHTML = formConfig.title
+        document.querySelector('#remark').innerHTML = formConfig.remark
+
+        // formConfig.submit = {
+        //     enable: true,
+        // }
+
+        // 渲染设计的表单
+        formRender('#form-design-container', config, formConfig, {
+            region: JSON.parse('<?=$region?>')
+        })
+    })
+</script>
+<?php $this->blockEnd() ?>

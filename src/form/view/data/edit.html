@@ -1,0 +1,66 @@
+<?php $this->layout('page'); ?>
+
+<div class="layui-card mon-action-container">
+    <div class="layui-card-body">
+        <form class="layui-form" action="" method="post">
+
+            <?php foreach($config as $item): ?>
+            <div class="layui-form-item">
+                <label class="layui-form-label">
+                    <?=$item['label']?>
+                </label>
+                <div class="layui-input-block">
+                    <input type="text" name="<?=$item['name']?>" class="layui-input" value="<?=$data['data'][$item['name']]?>">
+                </div>
+            </div>
+            <?php endforeach; ?>
+
+            <div class="layui-form-item layer-footer hidden">
+                <div class="layui-input-block text-left">
+                    <button class="layui-btn layui-btn-sm layui-btn-success" lay-submit
+                        lay-filter="submit">确认提交</button>
+                    <button type="reset" class="layui-btn layui-btn-sm layui-btn-primary">重置</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+
+<?php $this->block('js'); ?>
+<script>
+    layui.use(['mForm', 'imgSelect'], function () {
+        const mForm = layui.mForm
+        const imgSelect = layui.imgSelect
+        // 渲染表单
+        mForm.render()
+        mForm.submit('submit')
+
+        // 图片选择
+        document.querySelector('#upload').addEventListener('click', () => {
+            imgSelect.show({
+                api: "<?=$this->url('/files')?>",
+                uploadURL: "<?=$this->url('/upload')?>",
+                callback: (data, index) => {
+                    document.querySelector('#avatar-img').value = data[0].url
+                }
+            })
+        })
+        // 预览
+        document.querySelector('#preview').addEventListener('click', () => {
+            let url = document.querySelector('#avatar-img').value
+            if (url) {
+                top.layer.photos({
+                    photos: {
+                        title: "图片预览",
+                        data: [{ alt: '', src: url }]
+                    },
+                    // 是否显示底部栏
+                    footer: true,
+                    shade: 0.75
+                });
+            }
+        })
+    })
+</script>
+<?php $this->blockEnd(); ?>

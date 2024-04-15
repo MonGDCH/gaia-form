@@ -1,0 +1,31 @@
+{
+    "name": "mongdch/gaia-form",
+    "description": "The gaia Framework form plugin",
+    "license": "MIT",
+    "homepage": "http://gdmon.com/",
+    "keywords": [
+        "gaia",
+        "form"
+    ],
+    "authors": [
+        {
+            "name": "Mon",
+            "email": "985558837@qq.com",
+            "homepage": "http://www.gdmon.com/",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": ">=7.2.0",
+        "mongdch/gaia-admin": "^1.0",
+        "mongdch/gaia-ucenter": "^1.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "gaia\\form\\": "src/"
+        },
+        "files": [
+            "src/support.php"
+        ]
+    }
+}
